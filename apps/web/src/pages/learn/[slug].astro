@@ -1,0 +1,142 @@
+---
+import "@fontsource/space-grotesk/latin.css";
+import "@fontsource/ibm-plex-mono/latin.css";
+import "../../styles/global.css";
+import Base from "../../layouts/Base.astro";
+import Nav from "../../components/Nav.astro";
+import Footer from "../../components/Footer.astro";
+import Breadcrumb from "../../components/Breadcrumb.astro";
+import { getCollection, render } from "astro:content";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("learn");
+  return posts.map((p) => ({ params: { slug: p.slug }, props: { entry: p } }));
+}
+
+const { entry } = Astro.props as { entry: any };
+const { Content } = await render(entry);
+
+// Calculate reading time (approx 200 words per minute)
+const wordCount = entry.body?.split(/\s+/).length ?? 0;
+const readingTime = Math.max(1, Math.ceil(wordCount / 200));
+
+// Get related posts (same tags, excluding current)
+const allPosts = await getCollection("learn");
+const relatedPosts = allPosts
+  .filter((p) => p.slug !== entry.slug && p.data.tags.some((t: string) => entry.data.tags.includes(t)))
+  .slice(0, 3);
+---
+<Base
+  title={`${entry.data.title} — neural-coding.com`}
+  description={entry.data.description ?? entry.data.title}
+  ogType="article"
+  publishedAt={entry.data.publishedAt}
+  tags={entry.data.tags}
+  ogImage={entry.data.cover}
+>
+  <Nav />
+  <main id="main-content" class="container" style="padding: 26px 0 0;">
+    <Breadcrumb items={[
+      { label: "Home", href: "/" },
+      { label: "Learn", href: "/learn/" },
+      { label: entry.data.title }
+    ]} />
+
+    <article class="card" itemscope itemtype="https://schema.org/Article">
+      <div class="card-inner">
+        <div class="pill">
+          <time class="mono" datetime={entry.data.publishedAt} itemprop="datePublished">
+            {new Date(entry.data.publishedAt).toISOString().slice(0, 10)}
+          </time>
+          <span class="muted">{readingTime} min read</span>
+          <span class="muted">{entry.data.tags.join(" • ")}</span>
+        </div>
+        <h1 class="h1" style="margin-top: 14px;" itemprop="headline">{entry.data.title}</h1>
+        {entry.data.description ? <p class="kicker" itemprop="description">{entry.data.description}</p> : null}
+        <hr style="border: none; border-top: 1px solid rgba(233, 238, 246, 0.10); margin: 18px 0;" />
+        <div class="prose" itemprop="articleBody">
+          <Content />
+        </div>
+
+        {entry.data.tags.length > 0 && (
+          <div class="article-tags" style="margin-top: 24px;">
+            {entry.data.tags.map((tag: string) => (
+              <a href={`/learn/?tag=${encodeURIComponent(tag)}`} class="tag-link" rel="tag">
+                #{tag}
+              </a>
+            ))}
+          </div>
+        )}
+      </div>
+    </article>
+
+    {relatedPosts.length > 0 && (
+      <section class="related-posts" style="margin-top: 32px;">
+        <h2 class="h2">Related Articles</h2>
+        <div style="display: grid; gap: 14px; margin-top: 14px;">
+          {relatedPosts.map((p) => (
+            <article class="card">
+              <div class="card-inner">
+                <div class="pill">
+                  <span class="mono">{new Date(p.data.publishedAt).toISOString().slice(0, 10)}</span>
+                  <span class="muted">{p.data.tags.join(" • ")}</span>
+                </div>
+                <h3 class="h2" style="margin-top: 10px;">
+                  <a href={`/learn/${p.slug}/`}>{p.data.title}</a>
+                </h3>
+                {p.data.description && <p class="muted" style="margin: 0;">{p.data.description}</p>}
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+    )}
+  </main>
+  <Footer />
+  <style>
+    .article-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .tag-link {
+      display: inline-block;
+      padding: 4px 10px;
+      font-size: 0.85rem;
+      border-radius: 6px;
+      background: rgba(95, 225, 198, 0.1);
+      border: 1px solid rgba(95, 225, 198, 0.2);
+      text-decoration: none;
+      transition: background 140ms ease, border-color 140ms ease;
+    }
+    .tag-link:hover {
+      background: rgba(95, 225, 198, 0.18);
+      border-color: rgba(95, 225, 198, 0.4);
+    }
+  </style>
+  <style is:inline>
+    .prose :global(h2) {
+      margin-top: 22px;
+      letter-spacing: -0.01em;
+    }
+    .prose :global(p) {
+      color: rgba(233, 238, 246, 0.85);
+      line-height: 1.65;
+      max-width: 75ch;
+    }
+    .prose :global(pre) {
+      border: 1px solid rgba(233, 238, 246, 0.14);
+      border-radius: 12px;
+      padding: 14px;
+      overflow: auto;
+      background: rgba(0, 0, 0, 0.25);
+    }
+    .prose :global(code) {
+      color: rgba(233, 238, 246, 0.92);
+    }
+    .prose :global(a) {
+      text-decoration-color: rgba(95, 225, 198, 0.6);
+    }
+  </style>
+</Base>
+

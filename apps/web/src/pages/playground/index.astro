@@ -1,0 +1,67 @@
+---
+import "@fontsource/space-grotesk/latin.css";
+import "@fontsource/ibm-plex-mono/latin.css";
+import "../../styles/global.css";
+import Base from "../../layouts/Base.astro";
+import Nav from "../../components/Nav.astro";
+import Footer from "../../components/Footer.astro";
+import Breadcrumb from "../../components/Breadcrumb.astro";
+---
+<Base title="Playground — neural-coding.com" description="Interactive simulators and developer utilities for neural coding, spiking neural networks, and brain-inspired computation.">
+  <Nav />
+  <main id="main-content" class="container" style="padding: 26px 0 0;">
+    <Breadcrumb items={[
+      { label: "Home", href: "/" },
+      { label: "Playground" }
+    ]} />
+
+    <h1 class="h1">Playground</h1>
+    <p class="kicker" style="max-width: 75ch;">
+      Tools are deployed behind subdomains and reverse-proxied to keep the main site fast. Expect more simulators to land
+      weekly.
+    </p>
+
+    <div class="grid2" style="margin-top: 18px;">
+      <section class="card">
+        <div class="card-inner">
+          <h2 class="h2">Interactive Simulators</h2>
+          <p class="muted">
+            These are designed for intuition (parameter sweeps + real-time visuals), with an API layer for reproducible
+            runs.
+          </p>
+          <div class="btn-row">
+            <a class="btn" href="https://tools.neural-coding.com/lif/" rel="noopener">
+              <span class="mono">LIF-Explorer</span>
+              <span>Streamlit</span>
+            </a>
+            <a class="btn secondary" href="https://tools.neural-coding.com/weights/" rel="noopener">
+              <span class="mono">Weights</span>
+              <span>Hebbian</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-inner">
+          <h2 class="h2">Developer Utilities</h2>
+          <p class="muted">
+            Code transformation + data formatting. Initial releases are CLI-first; web UI follows after the specs
+            stabilize.
+          </p>
+          <div class="btn-row">
+            <a class="btn" href="/api/">
+              <span class="mono">Neural-Code-Transpiler</span>
+              <span>API</span>
+            </a>
+            <a class="btn" href="/api/">
+              <span class="mono">Neuro-Data-Formatter</span>
+              <span>API</span>
+            </a>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+  <Footer />
+</Base>

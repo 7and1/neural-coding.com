@@ -1,0 +1,18 @@
+# neural-coding.com robots.txt
+
+User-agent: *
+Allow: /
+
+# Disallow internal/API paths
+Disallow: /api/internal/
+Disallow: /_astro/
+
+# Crawl-delay for polite crawling
+Crawl-delay: 1
+
+# Sitemaps
+Sitemap: https://neural-coding.com/sitemap-index.xml
+
+# Host
+Host: https://neural-coding.com
+

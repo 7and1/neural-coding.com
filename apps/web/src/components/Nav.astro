@@ -1,0 +1,38 @@
+---
+const items = [
+  { href: "/playground/", label: "Playground" },
+  { href: "/learn/", label: "Learn" },
+  { href: "/api/", label: "API" }
+];
+
+const currentPath = Astro.url.pathname;
+---
+<a href="#main-content" class="skip-link">Skip to main content</a>
+<header class="topnav">
+  <div class="container topnav-inner">
+    <a class="brand" href="/" aria-label="neural-coding.com home">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">neural-coding.com</span>
+    </a>
+    <nav class="navlinks" aria-label="Primary navigation">
+      {items.map((i) => (
+        <a
+          href={i.href}
+          aria-current={currentPath.startsWith(i.href) ? "page" : undefined}
+          class={currentPath.startsWith(i.href) ? "active" : ""}
+        >
+          {i.label}
+        </a>
+      ))}
+    </nav>
+  </div>
+</header>
+
+<style>
+  .navlinks a.active {
+    color: var(--fg0);
+    background: rgba(95, 225, 198, 0.08);
+    border-color: rgba(95, 225, 198, 0.2);
+  }
+</style>
+

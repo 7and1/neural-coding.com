@@ -1,0 +1,186 @@
+---
+import "@fontsource/space-grotesk/latin.css";
+import "@fontsource/ibm-plex-mono/latin.css";
+import "../../styles/global.css";
+import Base from "../../layouts/Base.astro";
+import Nav from "../../components/Nav.astro";
+import Footer from "../../components/Footer.astro";
+import Breadcrumb from "../../components/Breadcrumb.astro";
+import { getCollection } from "astro:content";
+
+const posts = (await getCollection("learn")).sort(
+  (a, b) => new Date(b.data.publishedAt).getTime() - new Date(a.data.publishedAt).getTime()
+);
+
+// Extract all unique tags
+const allTags = [...new Set(posts.flatMap((p) => p.data.tags))].sort();
+
+// Calculate reading time helper
+const getReadingTime = (body: string | undefined) => {
+  const wordCount = body?.split(/\s+/).length ?? 0;
+  return Math.max(1, Math.ceil(wordCount / 200));
+};
+---
+<Base title="Learn — neural-coding.com" description="Deep technical articles on neural coding, spiking neural networks, and reproducible simulators.">
+  <Nav />
+  <main id="main-content" class="container" style="padding: 26px 0 0;">
+    <Breadcrumb items={[
+      { label: "Home", href: "/" },
+      { label: "Learn" }
+    ]} />
+
+    <h1 class="h1">Learn</h1>
+    <p class="kicker" style="max-width: 75ch;">
+      A research-to-reproducibility library. Articles are written with a "code angle" first: concrete steps to
+      implement, reproduce, and extend.
+    </p>
+
+    {allTags.length > 0 && (
+      <div class="tag-filter" style="margin-top: 18px;">
+        <span class="muted" style="margin-right: 8px;">Filter:</span>
+        <button class="tag-btn active" data-tag="all">All</button>
+        {allTags.map((tag) => (
+          <button class="tag-btn" data-tag={tag}>#{tag}</button>
+        ))}
+      </div>
+    )}
+
+    <div class="posts-grid" style="display:grid; gap: 14px; margin-top: 18px;">
+      {posts.map((p) => (
+        <article class="card post-card" data-tags={p.data.tags.join(",")}>
+          <div class="card-inner">
+            <div class="post-meta">
+              <div class="pill">
+                <time class="mono" datetime={p.data.publishedAt}>
+                  {new Date(p.data.publishedAt).toISOString().slice(0, 10)}
+                </time>
+                <span class="muted">{getReadingTime(p.body)} min read</span>
+              </div>
+              <div class="post-tags">
+                {p.data.tags.map((tag: string) => (
+                  <span class="tag-badge">#{tag}</span>
+                ))}
+              </div>
+            </div>
+            <h2 class="h2" style="margin-top: 12px;">
+              <a href={`/learn/${p.slug}/`}>{p.data.title}</a>
+            </h2>
+            {p.data.description ? <p class="muted post-desc">{p.data.description}</p> : null}
+          </div>
+        </article>
+      ))}
+    </div>
+
+    <p class="no-results muted" style="display: none; margin-top: 24px; text-align: center;">
+      No articles found for this tag.
+    </p>
+  </main>
+  <Footer />
+</Base>
+
+<style>
+  .tag-filter {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+  .tag-btn {
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    font-family: inherit;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 140ms ease;
+  }
+  .tag-btn:hover,
+  .tag-btn.active {
+    background: rgba(95, 225, 198, 0.12);
+    border-color: rgba(95, 225, 198, 0.4);
+    color: var(--fg0);
+  }
+  .post-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .post-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .tag-badge {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: rgba(95, 225, 198, 0.08);
+    color: var(--muted);
+  }
+  .post-desc {
+    margin: 6px 0 0;
+    line-height: 1.5;
+  }
+  .post-card.hidden {
+    display: none;
+  }
+</style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const tagBtns = document.querySelectorAll<HTMLButtonElement>(".tag-btn");
+    const postCards = document.querySelectorAll<HTMLElement>(".post-card");
+    const noResults = document.querySelector<HTMLElement>(".no-results");
+
+    // Check URL for tag parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialTag = urlParams.get("tag");
+
+    function filterPosts(tag: string) {
+      let visibleCount = 0;
+
+      postCards.forEach((card) => {
+        const tags = card.dataset.tags?.split(",") ?? [];
+        if (tag === "all" || tags.includes(tag)) {
+          card.classList.remove("hidden");
+          visibleCount++;
+        } else {
+          card.classList.add("hidden");
+        }
+      });
+
+      tagBtns.forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.tag === tag);
+      });
+
+      if (noResults) {
+        noResults.style.display = visibleCount === 0 ? "block" : "none";
+      }
+
+      // Update URL without reload
+      const url = new URL(window.location.href);
+      if (tag === "all") {
+        url.searchParams.delete("tag");
+      } else {
+        url.searchParams.set("tag", tag);
+      }
+      window.history.replaceState({}, "", url.toString());
+    }
+
+    tagBtns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        filterPosts(btn.dataset.tag ?? "all");
+      });
+    });
+
+    // Apply initial filter if tag in URL
+    if (initialTag) {
+      filterPosts(initialTag);
+    }
+  });
+</script>
+

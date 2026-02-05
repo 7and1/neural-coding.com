@@ -1,0 +1,91 @@
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="pill">
+          <span class="mono">neural-coding.com</span>
+          <span>•</span>
+          <span>Brain → Code</span>
+        </div>
+        <p class="muted" style="margin-top: 14px; max-width: 40ch;">
+          Educational content only. Simulators are simplified models, designed for intuition and reproducibility.
+        </p>
+      </div>
+
+      <nav class="footer-nav" aria-label="Footer navigation">
+        <div class="footer-col">
+          <h3 class="footer-heading">Explore</h3>
+          <ul>
+            <li><a href="/playground/">Playground</a></li>
+            <li><a href="/learn/">Learn</a></li>
+            <li><a href="/api/">API</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h3 class="footer-heading">Resources</h3>
+          <ul>
+            <li><a href="/rss.xml">RSS Feed</a></li>
+            <li><a href="/sitemap-index.xml">Sitemap</a></li>
+          </ul>
+        </div>
+      </nav>
+    </div>
+
+    <div class="footer-bottom">
+      <p class="muted">
+        © {new Date().getFullYear()} neural-coding.com. All rights reserved.
+      </p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  @media (min-width: 640px) {
+    .footer-grid {
+      grid-template-columns: 1.5fr 1fr;
+    }
+  }
+  .footer-nav {
+    display: flex;
+    gap: 48px;
+  }
+  .footer-col ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .footer-col li {
+    margin-top: 8px;
+  }
+  .footer-col a {
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 140ms ease;
+  }
+  .footer-col a:hover {
+    color: var(--fg0);
+  }
+  .footer-heading {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--fg1);
+    margin: 0 0 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .footer-bottom {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+  }
+  .footer-bottom p {
+    margin: 0;
+    font-size: 0.85rem;
+  }
+</style>
+

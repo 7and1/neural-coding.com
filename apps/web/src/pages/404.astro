@@ -1,0 +1,74 @@
+---
+import "@fontsource/space-grotesk/latin.css";
+import "@fontsource/ibm-plex-mono/latin.css";
+import "../styles/global.css";
+import Base from "../layouts/Base.astro";
+import Nav from "../components/Nav.astro";
+import Footer from "../components/Footer.astro";
+---
+<Base title="404 — Page Not Found — neural-coding.com" description="The page you're looking for doesn't exist." noindex={true}>
+  <Nav />
+  <main id="main-content" class="container" style="padding: 26px 0 0;">
+    <section class="card error-card">
+      <div class="card-inner">
+        <div class="pill">
+          <span class="mono">404</span>
+          <span class="muted">Page Not Found</span>
+        </div>
+        <h1 class="h1" style="margin-top: 14px;">
+          Lost in the <span style="color: var(--accent);">neural network</span>
+        </h1>
+        <p class="kicker" style="max-width: 60ch;">
+          The page you're looking for doesn't exist or has been moved. Perhaps the synaptic connection was pruned.
+        </p>
+
+        <div class="suggestions" style="margin-top: 24px;">
+          <h2 class="h2">Try these instead:</h2>
+          <div class="btn-row">
+            <a class="btn" href="/">
+              <span class="mono">/</span>
+              <span>Home</span>
+            </a>
+            <a class="btn secondary" href="/learn/">
+              <span class="mono">/learn</span>
+              <span>Articles</span>
+            </a>
+            <a class="btn" href="/playground/">
+              <span class="mono">/playground</span>
+              <span>Simulators</span>
+            </a>
+            <a class="btn" href="/api/">
+              <span class="mono">/api</span>
+              <span>Documentation</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="search-hint" style="margin-top: 24px;">
+          <p class="muted">
+            Looking for something specific? Check the <a href="/learn/">article library</a> or browse the <a href="/sitemap-index.xml">sitemap</a>.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</Base>
+
+<style>
+  .error-card {
+    text-align: center;
+    padding: 40px 0;
+  }
+  .error-card .card-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .error-card .btn-row {
+    justify-content: center;
+  }
+  .search-hint a {
+    color: var(--accent);
+  }
+</style>

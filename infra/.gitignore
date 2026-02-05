@@ -1,0 +1,15 @@
+# Environment variables with sensitive credentials
+.env
+.env.backup
+
+# Backup files
+*.backup
+*.tar.gz
+*.sql
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db

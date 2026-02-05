@@ -1,0 +1,84 @@
+name: deploy-api
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "apps/api/**"
+      - "apps/api/migrations/**"
+      - "packages/shared/**"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy API to Cloudflare Workers
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: "10"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm -C apps/api typecheck
+
+      - name: Run migrations
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          cd apps/api
+          # Create migrations tracking table
+          cat > /tmp/create_migrations_table.sql <<EOF
+          CREATE TABLE IF NOT EXISTS _migrations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            filename TEXT NOT NULL UNIQUE,
+            applied_at TEXT NOT NULL
+          );
+          EOF
+
+          DATABASE_NAME=$(grep -A 2 '\[\[d1_databases\]\]' wrangler.toml | grep 'database_name' | cut -d'"' -f2)
+          npx wrangler d1 execute "$DATABASE_NAME" --file=/tmp/create_migrations_table.sql --remote || true
+
+          # Apply migrations
+          for migration in migrations/*.sql; do
+            if [ -f "$migration" ]; then
+              echo "Applying migration: $(basename $migration)"
+              npx wrangler d1 execute "$DATABASE_NAME" --file="$migration" --remote || echo "Migration may already be applied"
+            fi
+          done
+
+      - name: Deploy to Cloudflare Workers
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: pnpm -C apps/api deploy
+
+      - name: Verify deployment
+        run: |
+          sleep 10
+          curl -f https://api.neural-coding.com/api/health || exit 1
+
+      - name: Notify on success
+        if: success()
+        run: |
+          echo "✅ API deployment successful"
+          echo "🔌 URL: https://api.neural-coding.com"
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "❌ API deployment failed"
+          echo "Check logs for details"

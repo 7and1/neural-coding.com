@@ -1,0 +1,47 @@
+name: content-daily
+
+on:
+  schedule:
+    # Daily at 08:15 UTC. Adjust as needed.
+    - cron: "15 8 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r scripts/pipeline/requirements.txt
+
+      - name: Generate content
+        env:
+          MAX_ITEMS: "2"
+          MOCK_LLM: "1"
+        run: |
+          python scripts/pipeline/run_daily.py
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "content: daily paper summaries"
+          title: "Daily content: new paper summaries"
+          body: |
+            Automated daily ingestion from arXiv (q-bio.NC, cs.NE).
+            This PR adds new markdown posts under apps/web/src/content/learn/.
+          branch: "bot/content-daily"
+          delete-branch: true
+

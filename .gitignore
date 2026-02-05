@@ -1,0 +1,30 @@
+.DS_Store
+.idea
+.vscode
+
+node_modules
+.pnpm-store
+dist
+.astro
+.wrangler
+
+.env
+.env.local
+.env.production
+.dev.vars
+
+*.log
+deploy.log
+.rollback-info
+
+# Backup files
+db/backups/*.sql
+db/backups/*.sql.gz
+db/backups/r2/*
+
+# Security - never commit
+CLAUDE.md
+.claude/
+wrangler.toml
+apps/*/wrangler.toml
+

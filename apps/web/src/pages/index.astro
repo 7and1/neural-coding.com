@@ -1,0 +1,234 @@
+---
+import "@fontsource/space-grotesk/latin.css";
+import "@fontsource/ibm-plex-mono/latin.css";
+import "../styles/global.css";
+import Base from "../layouts/Base.astro";
+import Nav from "../components/Nav.astro";
+import Footer from "../components/Footer.astro";
+import { getCollection } from "astro:content";
+
+// Get latest posts for homepage
+const latestPosts = (await getCollection("learn"))
+  .sort((a, b) => new Date(b.data.publishedAt).getTime() - new Date(a.data.publishedAt).getTime())
+  .slice(0, 3);
+---
+<Base title="neural-coding.com — Brain to Code" description="Brain-inspired computation, spiking neural networks, and practical simulators. Interactive tools and research-to-code articles.">
+  <Nav />
+  <main id="main-content" class="container" style="padding: 26px 0 0;">
+    <div class="grid2">
+      <section class="card">
+        <div class="card-inner">
+          <div class="pill">
+            <span class="mono">spikes • synapses • code</span>
+            <span class="muted">minimal tools, maximal intuition</span>
+          </div>
+          <h1 class="h1">
+            A practical lab for <span style="color: var(--accent);">neural coding</span> and brain-inspired compute.
+          </h1>
+          <p class="kicker" style="max-width: 70ch;">
+            Interactive simulators, developer utilities, and a research-to-article pipeline that turns new papers into
+            reproducible code angles.
+          </p>
+          <div class="btn-row">
+            <a class="btn" href="/playground/">
+              <span class="mono">/playground</span>
+              <span>Run simulators</span>
+            </a>
+            <a class="btn secondary" href="/learn/">
+              <span class="mono">/learn</span>
+              <span>Read breakdowns</span>
+            </a>
+            <a class="btn" href="/api/">
+              <span class="mono">/api</span>
+              <span>Integrate</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <aside class="card" aria-label="Live neuron visualization">
+        <div style="position: relative;">
+          <canvas
+            id="spikeCanvas"
+            width="860"
+            height="520"
+            style="display:block; width:100%; height:auto; background: rgba(0,0,0,0.16); aspect-ratio: 860/520;"
+            aria-label="Interactive LIF neuron simulation showing spike raster and membrane potential"
+          ></canvas>
+          <div style="position:absolute; inset:auto 14px 14px 14px; display:flex; gap:10px; align-items:center;">
+            <div class="pill" style="gap: 12px;">
+              <span class="mono">LIF</span>
+              <label class="muted" for="rate">rate</label>
+              <input id="rate" type="range" min="1" max="40" value="14" aria-label="Input firing rate in Hz" />
+              <span class="muted" id="rateLabel">14 Hz</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    {latestPosts.length > 0 && (
+      <section class="latest-posts" style="margin-top: 32px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+          <h2 class="h2" style="margin: 0;">Latest Articles</h2>
+          <a href="/learn/" class="muted" style="font-size: 0.9rem;">View all →</a>
+        </div>
+        <div style="display: grid; gap: 14px;">
+          {latestPosts.map((p) => (
+            <article class="card">
+              <div class="card-inner">
+                <div class="pill">
+                  <time class="mono" datetime={p.data.publishedAt}>
+                    {new Date(p.data.publishedAt).toISOString().slice(0, 10)}
+                  </time>
+                  <span class="muted">{p.data.tags.join(" • ")}</span>
+                </div>
+                <h3 class="h2" style="margin-top: 10px;">
+                  <a href={`/learn/${p.slug}/`}>{p.data.title}</a>
+                </h3>
+                {p.data.description && <p class="muted" style="margin: 4px 0 0;">{p.data.description}</p>}
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+    )}
+  </main>
+  <Footer />
+  <script is:inline>
+    const canvas = document.getElementById("spikeCanvas");
+    const rate = document.getElementById("rate");
+    const rateLabel = document.getElementById("rateLabel");
+    const ctx = canvas.getContext("2d");
+
+    function fit() {
+      const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      const cssW = canvas.clientWidth;
+      const cssH = Math.round(cssW * (520 / 860));
+      canvas.style.height = cssH + "px";
+      canvas.width = Math.floor(cssW * dpr);
+      canvas.height = Math.floor(cssH * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    window.addEventListener("resize", fit, { passive: true });
+    fit();
+
+    // A stylized spike raster + membrane trace, not a biophysically exact simulation.
+    const state = {
+      t: 0,
+      v: -0.07,
+      vRest: -0.07,
+      vReset: -0.075,
+      vTh: -0.05,
+      tau: 0.018,
+      drive: 0.002,
+      spikes: []
+    };
+
+    function randn() {
+      // Box-Muller
+      let u = 0,
+        v = 0;
+      while (u === 0) u = Math.random();
+      while (v === 0) v = Math.random();
+      return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+    }
+
+    function step(dt) {
+      const hz = Number(rate.value);
+      const p = Math.min(0.95, (hz * dt) / 1.0);
+      const spikeIn = Math.random() < p ? 1 : 0;
+      const noise = 0.004 * randn();
+      const dv = ((state.vRest - state.v) / state.tau + state.drive * spikeIn) * dt + noise * dt;
+      state.v += dv;
+      if (state.v >= state.vTh) {
+        state.spikes.push(state.t);
+        state.v = state.vReset;
+      }
+      state.t += dt;
+      const maxT = 2.4;
+      if (state.t > maxT) {
+        state.t = 0;
+        state.spikes = [];
+      }
+    }
+
+    function draw() {
+      const w = canvas.clientWidth;
+      const h = canvas.clientHeight;
+      ctx.clearRect(0, 0, w, h);
+
+      // Grid
+      ctx.strokeStyle = "rgba(233, 238, 246, 0.10)";
+      ctx.lineWidth = 1;
+      for (let i = 1; i < 6; i++) {
+        const x = (w * i) / 6;
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+        ctx.stroke();
+      }
+      for (let i = 1; i < 5; i++) {
+        const y = (h * i) / 5;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
+      }
+
+      // Spikes (raster-ish)
+      const maxT = 2.4;
+      ctx.strokeStyle = "rgba(95, 225, 198, 0.9)";
+      ctx.lineWidth = 2;
+      const top = 18;
+      const bot = Math.min(h * 0.55, h - 140);
+      for (const ts of state.spikes) {
+        const x = (w * ts) / maxT;
+        ctx.beginPath();
+        ctx.moveTo(x, top);
+        ctx.lineTo(x, bot);
+        ctx.stroke();
+      }
+
+      // Membrane trace (sparkline)
+      const traceH = h - bot - 18;
+      const originY = bot + traceH * 0.72;
+      const scale = traceH * 8.5; // volts -> pixels
+
+      ctx.strokeStyle = "rgba(255, 204, 102, 0.85)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      const n = 240;
+      for (let i = 0; i < n; i++) {
+        const t = (maxT * i) / (n - 1);
+        // Recompute a smooth proxy of membrane potential for display.
+        const v =
+          state.vRest +
+          0.012 * Math.sin(2 * Math.PI * (t / maxT) * 1.0) +
+          0.007 * Math.sin(2 * Math.PI * (t / maxT) * 2.0);
+        const x = (w * t) / maxT;
+        const y = originY - (v - state.vRest) * scale;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      // Labels
+      ctx.fillStyle = "rgba(233, 238, 246, 0.78)";
+      ctx.font = "12px 'IBM Plex Mono', monospace";
+      ctx.fillText("spikes", 14, 18);
+      ctx.fillText("membrane", 14, bot + 18);
+      requestAnimationFrame(draw);
+    }
+
+    rate.addEventListener("input", () => {
+      rateLabel.textContent = `${rate.value} Hz`;
+    });
+    rateLabel.textContent = `${rate.value} Hz`;
+
+    // Run a lightweight continuous update loop.
+    setInterval(() => step(1 / 60), 1000 / 60);
+    requestAnimationFrame(draw);
+  </script>
+</Base>
+

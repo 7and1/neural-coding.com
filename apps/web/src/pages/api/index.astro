@@ -1,0 +1,39 @@
+---
+import "@fontsource/space-grotesk/latin.css";
+import "@fontsource/ibm-plex-mono/latin.css";
+import "../../styles/global.css";
+import Base from "../../layouts/Base.astro";
+import Nav from "../../components/Nav.astro";
+import Footer from "../../components/Footer.astro";
+import Breadcrumb from "../../components/Breadcrumb.astro";
+---
+<Base title="API — neural-coding.com" description="Developer API for neural coding: papers, posts, simulators. RESTful endpoints for integration.">
+  <Nav />
+  <main id="main-content" class="container" style="padding: 26px 0 0;">
+    <Breadcrumb items={[
+      { label: "Home", href: "/" },
+      { label: "API" }
+    ]} />
+
+    <h1 class="h1">API</h1>
+    <p class="kicker" style="max-width: 75ch;">
+      API is served by Cloudflare Workers. Public endpoints are under <span class="mono">/api/v1/*</span>; internal
+      ingestion endpoints are under <span class="mono">/api/internal/*</span> (Bearer token).
+    </p>
+
+    <section class="card" style="margin-top: 18px;">
+      <div class="card-inner">
+        <h2 class="h2">Endpoints (v1)</h2>
+        <pre class="card" style="margin: 0; padding: 14px; overflow:auto;"><code>GET  /api/v1/health
+GET  /api/v1/playground/tools
+GET  /api/v1/learn/posts
+GET  /api/v1/learn/posts/:slug
+POST /api/v1/brain-context</code></pre>
+        <p class="muted" style="margin-top: 12px;">
+          Internal (Bearer): <span class="mono">POST /api/internal/ingest/tick</span>, <span class="mono">POST /api/internal/demo/publish</span>, <span class="mono">POST /api/internal/demo/cover</span>.
+        </p>
+      </div>
+    </section>
+  </main>
+  <Footer />
+</Base>
