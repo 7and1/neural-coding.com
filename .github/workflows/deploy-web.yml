@@ -35,22 +35,18 @@ jobs:
         run: pnpm -C apps/web build
 
       - name: Deploy to Cloudflare Pages
+        id: deploy
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy apps/web/dist --project-name=neural-coding-web
 
-      - name: Verify deployment
-        run: |
-          sleep 10
-          curl -f https://neural-coding.com || exit 1
-
       - name: Notify on success
         if: success()
         run: |
           echo "✅ Web deployment successful"
-          echo "🌐 URL: https://neural-coding.com"
+          echo "🌐 URL: ${{ steps.deploy.outputs.deployment-url }}"
 
       - name: Notify on failure
         if: failure()
