@@ -308,7 +308,7 @@ describe("Integration Tests", () => {
       expect(article?.cover_r2_key).toBe("covers/neural-coding-intro.webp");
 
       // Verify cover exists in R2
-      const coverObject = await mockR2.get(article!.cover_r2_key);
+      const coverObject = await mockR2.get(article!.cover_r2_key as string);
       expect(coverObject).not.toBeNull();
     });
 
@@ -316,7 +316,7 @@ describe("Integration Tests", () => {
       const stmt = mockDB.prepare(`SELECT tags_json FROM learn_articles WHERE slug = ?`);
       const result = await stmt.bind("neural-coding-intro").first();
 
-      const tags = JSON.parse(result?.tags_json || "[]");
+      const tags = JSON.parse((result?.tags_json as string) || "[]");
       expect(tags).toContain("neural-coding");
       expect(tags).toContain("snn");
       expect(tags).toContain("tutorial");
@@ -489,7 +489,7 @@ describe("Integration Tests", () => {
       const result = await mockR2.put(newAssetKey, imageData.buffer);
 
       expect(result).toBeDefined();
-      expect(result.key).toBe(newAssetKey);
+      expect(result!.key).toBe(newAssetKey);
     });
 
     it("should list assets with prefix", async () => {
